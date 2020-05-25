@@ -7,14 +7,41 @@ import Title from './components/Title/';
 import Button from './components/Button';
 import { Input } from './components/Input';
 import QtdText from './components/QtdText';
+import Swal from 'sweetalert2';
 
 function App() {
     const [qtdSites, setQtdSites] = useState([]);
     const [url, setUrl] = useState(' ');
-    useEffect(async () => {
+    const [deleteURL, setDeleteURL] = useState([]);
+    const [deleteID, setDeleteID] = useState([]);
+
+    const sendURL = async (url) => {
+        const response = await api.post('/addSite', {
+            url,
+        });
+        if (response.status < 400) {
+            await updateQTD();
+            Swal.fire({
+                title: 'Site Added!',
+                icon: 'success',
+                html: `Save this token if you want to disable our service <strong>${response.data.id}</strong>`,
+            });
+        } else {
+            Swal.fire({
+                title: 'Error!',
+                icon: 'error',
+                html: 'Probably this site has already been registered!',
+            });
+        }
+    };
+
+    const updateQTD = async () => {
         const response = await api.get('/getQtd');
         await api.get('/pingToAll');
         setQtdSites(response.data.qtdSites);
+    };
+    useEffect(async () => {
+        await updateQTD();
     }, []);
 
     useEffect(async () => {
@@ -53,7 +80,7 @@ function App() {
                 onChange={(event) => setUrl(event.target.value)}
             ></Input>
 
-            <Button onClick={() => console.log(url)}>Send</Button>
+            <Button onClick={() => sendURL(url)}>Send</Button>
             <br />
             <QtdText>
                 <b style={{ fontWeight: 'lighter' }}>
